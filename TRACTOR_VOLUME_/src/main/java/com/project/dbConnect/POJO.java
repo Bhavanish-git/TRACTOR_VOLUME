@@ -4,7 +4,9 @@ package com.project.dbConnect;
 
 import java.sql.Date;
 
+import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -18,7 +20,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @JsonInclude(Include.NON_NULL)
 
-
+@Component
 public class POJO {
 
 	@JsonProperty("@id")
@@ -38,7 +40,7 @@ public class POJO {
 	DEALER_PAN_NUMBER,
 	PRODUCT;
 
-    
+	@JsonFormat(pattern="yyyy-MM-dd")
 	private Date LMS_AUTH_DATE;
 	private Integer TOTAL_SOURCED_QUANTITY_MFG;
 	
@@ -55,13 +57,18 @@ public class POJO {
 	private Integer BUSINESS_IRR;
 	
 	@JsonProperty("TOTAL_SOURCED_QUANTITY_REGION")
-	private Integer total_sourced_qty_region;
+	private Integer TOTAL_SOURCED_QTY_REGION;
 	
 	@JsonProperty("TOTAL_SOURCED_QUANTITY")
 	private Integer total_sourced_qty;
 	
-	private Integer TOTAL_SOURCED_VOLUME,
-	TOTAL_SOURCED_VOLUME_REGION;
+	private Integer TOTAL_SOURCED_VOLUME;
+	
+	@JsonProperty("TOTAL_SOURCED_VOLUME_REGION")
+
+	private Integer TOTAL_SOURCED_VOLUME_REGION;
+	
+	private String OSB_BATCH_ID;
 	
 	/*private Integer TOTAL_INCENTIVE_TRACTOR,
 	REFEREAL_FEE_SLAB_TRACTOR,
@@ -79,7 +86,7 @@ public class POJO {
 			String AREA,String REGION,String BRANCH,String PAYOUT_PERIODICITY,
 			Integer amount_financed,String MANUFACTURER_ID,String SCHEME,Integer TOTAL_SOURCED_VOLUME_MFG,
 			String DEALER_PAN_NUMBER,Date LMS_AUTH_DATE,String model_no,String PRODUCT,String MAKE_ID,
-			Integer BUSINESS_IRR,Integer total_sourced_qty_region,Integer total_sourced_qty,Integer TOTAL_SOURCED_VOLUME,
+			Integer BUSINESS_IRR,Integer total_sourced_qty,Integer TOTAL_SOURCED_VOLUME,Integer total_sourced_qty_region,
 			Integer TOTAL_SOURCED_VOLUME_REGION)//	Integer TOTAL_INCENTIVE_TRACTOR,Integer REFEREAL_FEE_SLAB_TRACTOR,Integer RULE_ID_TRACTOR,Integer INCENTIVE_SLAB_TRACTOR)
 	{
 		this.agreementno=id;
@@ -100,7 +107,7 @@ public class POJO {
 		this.PRODUCT=PRODUCT;
 		this.MAKE_ID=MAKE_ID;
 		this.BUSINESS_IRR=BUSINESS_IRR;
-		this.total_sourced_qty_region=total_sourced_qty_region;
+		this.TOTAL_SOURCED_QTY_REGION=total_sourced_qty_region;
 		this.total_sourced_qty=total_sourced_qty;
 		this.TOTAL_SOURCED_VOLUME=TOTAL_SOURCED_VOLUME;
 		this.TOTAL_SOURCED_VOLUME_REGION=TOTAL_SOURCED_VOLUME_REGION;
@@ -189,7 +196,7 @@ public class POJO {
 	public void setPRODUCT(String pRODUCT) {
 		PRODUCT = pRODUCT;
 	}
-
+	@JsonFormat(pattern="yyyy-MM-dd")
 	public Date getLMS_AUTH_DATE() {
 		return LMS_AUTH_DATE;
 	}
@@ -254,20 +261,39 @@ public class POJO {
 		BUSINESS_IRR = bUSINESS_IRR;
 	}
 
-	public Integer gettotal_sourced_qty_region() {
-		return total_sourced_qty_region;
+	
+
+	
+
+	@Override
+	public String toString() {
+		return "POJO [agreementno=" + agreementno + ", zone=" + zone + ", assettype=" + assettype + ", AREA=" + AREA
+				+ ", REGION=" + REGION + ", BRANCH=" + BRANCH + ", PAYOUT_PERIODICITY=" + PAYOUT_PERIODICITY
+				+ ", SCHEME=" + SCHEME + ", DEALER_PAN_NUMBER=" + DEALER_PAN_NUMBER + ", PRODUCT=" + PRODUCT
+				+ ", LMS_AUTH_DATE=" + LMS_AUTH_DATE + ", TOTAL_SOURCED_QUANTITY_MFG=" + TOTAL_SOURCED_QUANTITY_MFG
+				+ ", amount_financed=" + amount_financed + ", MANUFACTURER_ID=" + MANUFACTURER_ID
+				+ ", TOTAL_SOURCED_VOLUME_MFG=" + TOTAL_SOURCED_VOLUME_MFG + ", model_no=" + model_no + ", MAKE_ID="
+				+ MAKE_ID + ", BUSINESS_IRR=" + BUSINESS_IRR + ", TOTAL_SOURCED_QTY_REGION=" + TOTAL_SOURCED_QTY_REGION
+				+ ", total_sourced_qty=" + total_sourced_qty + ", TOTAL_SOURCED_VOLUME=" + TOTAL_SOURCED_VOLUME
+				+ ", TOTAL_SOURCED_VOLUME_REGION=" + TOTAL_SOURCED_VOLUME_REGION + "]";
 	}
 
-	public void settotal_sourced_qty_region(Integer tOTAL_SOURCED_QTY_REGION) {
-		total_sourced_qty_region = tOTAL_SOURCED_QTY_REGION;
+	public Integer getTOTAL_SOURCED_QTY_REGION() {
+		return TOTAL_SOURCED_QTY_REGION;
 	}
 
-	public Integer gettotal_sourced_qty() {
+	public void setTOTAL_SOURCED_QTY_REGION(Integer tOTAL_SOURCED_QTY_REGION) {
+		TOTAL_SOURCED_QTY_REGION = tOTAL_SOURCED_QTY_REGION;
+	}
+
+	
+
+	public Integer getTotal_sourced_qty() {
 		return total_sourced_qty;
 	}
 
-	public void settotal_sourced_qty(Integer tOTAL_SOURCED_QTY) {
-		total_sourced_qty = tOTAL_SOURCED_QTY;
+	public void setTotal_sourced_qty(Integer total_sourced_qty) {
+		this.total_sourced_qty = total_sourced_qty;
 	}
 
 	public Integer getTOTAL_SOURCED_VOLUME() {
@@ -284,6 +310,14 @@ public class POJO {
 
 	public void setTOTAL_SOURCED_VOLUME_REGION(Integer tOTAL_SOURCED_VOLUME_REGION) {
 		TOTAL_SOURCED_VOLUME_REGION = tOTAL_SOURCED_VOLUME_REGION;
+	}
+
+	public String getOSB_BATCH_ID() {
+		return OSB_BATCH_ID;
+	}
+
+	public void setOSB_BATCH_ID(String oSB_BATCH_ID) {
+		OSB_BATCH_ID = oSB_BATCH_ID;
 	}
 
 	/*public Integer getTOTAL_INCENTIVE_TRACTOR() {

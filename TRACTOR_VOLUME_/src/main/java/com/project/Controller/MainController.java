@@ -1,39 +1,34 @@
 package com.project.Controller;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.project.dbConnect.POJO;
-import com.project.dbConnect.service;
 
 @RestController
 public class MainController {
+	@Autowired JdbcTemplate jdbc;
 	
 	@Autowired(required=true) ControllerService cont;
-	
-	@Autowired(required=true) service serv;
-	
+		
 	
 	@PostMapping(path = "response")
-//	@Scheduled(fixedRate = 5000 )
+	@Scheduled(fixedRate = 15000 )
 	public String response() throws IOException {
-		return cont.Response();
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return cont.Request();
 	}
 	
 	
-	@RequestMapping("/test")
-//	@Scheduled(fixedRate = 5000 )
-	public List<POJO> test() throws IOException {
-		return serv.hello();
-	}
-	
-	
-	
+
 
 }

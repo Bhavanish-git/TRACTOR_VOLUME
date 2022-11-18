@@ -3,7 +3,7 @@ package com.project.model;
 
 import java.sql.Date;
 
-
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -96,7 +96,7 @@ public class RelTractorVolumeMon {
     
     @JsonProperty("LMS_AUTH_DATE")
     @SerializedName("LMS_AUTH_DATE")
-
+    @JsonFormat(pattern="yyyy-MM-dd")
     @Expose
     private Date lmsAuthDate;
     
@@ -290,7 +290,7 @@ public class RelTractorVolumeMon {
     public void setDealerPanNumber(String dealerPanNumber) {
         this.dealerPanNumber = dealerPanNumber;
     }
-
+    @JsonFormat(pattern="yyyy-MM-dd")
     public Date getLmsAuthDate() {
         return lmsAuthDate;
     }

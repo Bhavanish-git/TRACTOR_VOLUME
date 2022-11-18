@@ -12,32 +12,44 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.RestTemplate;
 
+
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.project.model.Case;
 import com.project.model.CaseRequest;
+import com.project.dbConnect.POJO;
 import com.project.dbConnect.service;
 
 
 @Component
 public class ControllerService {
 	
-	String status="";
 	
-    @PostMapping(path = "status",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
+	@Value("${spring.datasource.url}")
+	private String url ;
+	
+	@Value("${spring.datasource.username}")
+	private String username;
+	
+	@Value("${spring.datasource.password}")
+	private String password;
+	
+	@Autowired Environment env ;
+	
+    String status="";
 
-    public String Request(@RequestBody String json) throws Exception {
+    public String Response(@RequestBody String json) throws Exception {
     	
-    	System.out.println("request--------->"+json);
+    	//System.out.println("request--------->"+json);
     	RestTemplate restTemplate2 = new RestTemplate();
     	
     	String urlString2 = "https://cholamandalam--tst1.custhelp.com/determinations-server/batch/12.2.7/policy-models/VF_Volume_Payout/assessor/";
@@ -48,107 +60,186 @@ public class ControllerService {
 
     	HttpEntity<String> entity2 = new HttpEntity<String>(json,headers2);
     	String answer = restTemplate2.postForObject(uri, entity2, String.class);
-    	
-    	System.out.println(answer);
+    	//System.out.println(answer);
     	
    	
-    	/*try {
+    	try 
+    	{
+    		//Class.forName("oracle.jdbc.driver.OracleDriver");
+			//String mysqlUrl = "jdbc:oracle:thin:@mexacscifcl-sqmcv-scan.dbprimarysn.dbexacsvcn01.oraclevcn.com:1625/SITFIN_SITFIN_PDB.paas.oracle.com";
+    		url = env.getProperty("spring.datasource.url");
+    		username = env.getProperty("spring.datasource.username");
+    		password = env.getProperty("spring.datasource.password");
     		
-    		Class.forName("oracle.jdbc.driver.OracleDriver");
-			String mysqlUrl = "jdbc:oracle:thin:@mexacscifcl-sqmcv-scan.dbprimarysn.dbexacsvcn01.oraclevcn.com:1625/SITFIN_SITFIN_PDB.paas.oracle.com";
-			Connection con = DriverManager.getConnection(mysqlUrl, "cholabre", "Welcome_789");
+    		Connection con = DriverManager.getConnection(url,username,password);
+    		
 			System.out.println("Connection established......");
 			
-			    try {
-									
-					JSONObject jsonObj = new JSONObject(answer);
-					JSONArray ja_data = jsonObj.getJSONArray("cases");
-				            
-					JSONObject jsonObj1 = ja_data.getJSONObject(0);
-					JSONArray ja = jsonObj1.getJSONArray("statusentity");
-					int len = ja.length();
-						
-					ArrayList<String> id = new ArrayList<>();
-					ArrayList<String> status = new ArrayList<>();
-					//System.out.println("Len  = "+len);
-						
-					for(int j=0; j<len; j++)
+			try
+			{
+				JSONObject jsonObj = new JSONObject(answer);
+				
+				JSONArray ja_data = jsonObj.getJSONArray("cases");
+				//int ja_len = ja_data.length();
+				//System.out.println( "ja_data length ===================" + ja_len);
+				
+				JSONObject jsonObj1 = ja_data.getJSONObject(0);
+				JSONArray ja = jsonObj1.getJSONArray("Rel_Tractor_Volume_Mon");
+				int len = ja.length();
+
+				ArrayList<String> id = new ArrayList<>();
+				ArrayList<Object> RULE = new ArrayList<>();
+				ArrayList<Object> TOTAL = new ArrayList<>();
+				ArrayList<Object> INCENTIVE = new ArrayList<>();
+				ArrayList<Object> REFEREAL = new ArrayList<>();
+				//System.out.println("ja.Len  ================== "+len);
+				
+				
+				for(int j=0; j<len; j++)
+				{
+					JSONObject jsonz = ja.getJSONObject(j);
+					  System.out.println(jsonz);
+					RULE.add (jsonz.get("RULE_ID_TRACTOR"));
+					TOTAL.add(jsonz.get("TOTAL_INCENTIVE_TRACTOR"));
+					INCENTIVE.add(jsonz.get("INCENTIVE_SLAB_TRACTOR"));
+					REFEREAL.add(jsonz.get("REFEREAL_FEE_SLAB_TRACTOR"));
+					id.add(jsonz.getString("@id"));
+				}
+				System.out.println("Copied.........");
+				int size=id.size();
+				//System.out.println("Size : "+size);
+				int count=0;
+				PreparedStatement ps_processing,ps_pro,ps_unpro;
+				
+				try
+				{
+					System.out.println("...........Records Processing.........");
+					ps_processing = con.prepareStatement("UPDATE PAYOUT_TRACTOR_VOLUME_TBL SET RULE_ID_TRACTOR = ?, TOTAL_INCENTIVE_TRACTOR = ? ,INCENTIVE_SLAB_TRACTOR = ?,REFEREAL_FEE_SLAB_TRACTOR = ?,OSB_STATUS = 'PROCESSING' WHERE AGREEMENTNO = ?");		          
+				
+				String agreementno = "";
+				String ruleid = "";
+				String TOTALINCENTIVE = "";
+				String INCENTIVESLAB = "";
+				String REFEREALFEESLAB = "";
+				
+					for(int i=0;i<size;i++)
 					{
-						JSONObject jsonz = ja.getJSONObject(j);
-				        //  System.out.println(jsonz);
-				        status.add(jsonz.getString("ACTIVE_STATUS"));
-				        id.add(jsonz.getString("@id"));
-					}
+						 agreementno = id.get(i) ;
+						 System.out.println("agreementno : "+agreementno);
 						
-					System.out.println("Copied.........");
-					int size=id.size();
-					//System.out.println("Size : "+size);
-					int count=0;
-					PreparedStatement ps_processing,ps_pro,ps_unpro;
-		
-						try {
-							System.out.println("...........Records Processing.........");
-							ps_processing = con.prepareStatement("UPDATE SAMPLE_TABLE1 SET ACTIVE_STATUS = ?, STAMP = current_timestamp ,WSO2_STATUS = 'PROCESSING' WHERE AGREEMENT_NO = ?");		          
-									
-							for(int i=0;i<size;i++)
-							{
-								String agreement_no = id.get(i) ;
-								//System.out.println("no : "+agreement_no);
-								String active_status = status.get(i);
-								//System.out.println("as : "+active_status);
-								ps_processing.setString(1, active_status);
-								ps_processing.setString(2, agreement_no);
-								ps_processing.executeUpdate();
-								count++;
-								//System.out.rintln(count+" row updated");
-							}
-								ps_processing.close();
-											
-								ps_pro=con.prepareStatement("update sample_table1 set WSO2_status ='PROCESSED' where WSO2_STATUS = 'PROCESSING'");
-								ps_pro.executeUpdate();
-								ps_pro.close();
-										
-								System.out.println("............Records Processed.........");
-									
-					     } catch(Exception e3)
-							{
-								ps_unpro=con.prepareStatement("UPDATE SAMPLE_TABLE1 SET WSO2_STATUS='UNPROCESSED' where WSO2_STATUS = 'PROCESSING' ");
-								ps_unpro.executeUpdate();
-								ps_unpro.close();
-														
-								System.out.println("*******Failed*********");
-							}
-								
-					System.out.println(count+" >>>>>>>>>>>>>Records Updated....."); 
+						if(RULE.get(i).toString().equals("{}")) {
 							
-				} catch(Exception e1){
-						e1.printStackTrace();
-				   }
-			    	 finally {
-								try {
-									  con.close();
-									  System.out.println("Connection closed..........");
-									} catch (SQLException sqlException)
-								      {
-									                sqlException.printStackTrace();
-									  }
-			    	          }
-	     }  catch(Exception e2){
-	    	e2.printStackTrace();
-	        }*/
+							ruleid = "0";
+
+							 }else {
+									ruleid = RULE.get(i).toString();
+
+							 }                               
+						
+						if(TOTAL.get(i).toString().equals("{}")) {
+							 TOTALINCENTIVE = "0";
+
+
+						 }else {
+							 TOTALINCENTIVE = TOTAL.get(i).toString();
+
+						 }
+						//System.out.println("total incentive ==== "+TOTAL.get(i));
+						System.out.println("TOTALINCENTIVE === "+TOTALINCENTIVE);
+
+
+						if(INCENTIVE.get(i).toString().equals("{}")) {
+							INCENTIVESLAB =  "0";
+
+
+							 }else {
+									INCENTIVESLAB = INCENTIVE.get(i).toString();
+
+							 }
+						System.out.println("INCENTIVESLAB  ===  "+INCENTIVESLAB);
+
+						if(REFEREAL.get(i).toString().equals("{}")) {  
+							REFEREALFEESLAB =  "0";
+
+							 }else {
+									
+									REFEREALFEESLAB = REFEREAL.get(i).toString();
+
+							 }
+						
+						System.out.println("REFEREALFEESLAB  ===  "+REFEREALFEESLAB);
+
+						ps_processing.setDouble(1, Double.parseDouble(ruleid));
+						//System.out.println(ps_processing.setInt(1, (Integer) ruleid));
+						
+						ps_processing.setDouble(2,Double.parseDouble(TOTALINCENTIVE) );
+						ps_processing.setDouble(3, Double.parseDouble(INCENTIVESLAB));
+						ps_processing.setDouble(4, Double.parseDouble(REFEREALFEESLAB));
+						ps_processing.setString(5, agreementno);
+						ps_processing.executeUpdate();
+						count++;
+						//System.out.rintln(count+" row updated");
+					}
+					ps_processing.close();
+					
+					ps_pro=con.prepareStatement("UPDATE PAYOUT_TRACTOR_VOLUME_TBL SET OSB_STATUS ='PROCESSED' WHERE OSB_STATUS = 'PROCESSING'");
+					ps_pro.executeUpdate();
+					ps_pro.close();
+					
+					System.out.println("............Records Processed.........");
+					
+				} 
+				catch(Exception e3)
+				{
+					ps_unpro=con.prepareStatement("UPDATE PAYOUT_TRACTOR_VOLUME_TBL SET OSB_STATUS='FAILED' WHERE OSB_STATUS = 'PROCESSING' ");
+					ps_unpro.executeUpdate();
+					ps_unpro.close();
+														
+					System.out.println("*******Failed*********");
+					System.out.println(e3.getLocalizedMessage());
+				}
+								
+				System.out.println(count+" >>>>>>>>>>>>>Records Updated....."); 
+							
+			} 
+			catch(Exception e1)
+			{
+				e1.printStackTrace();
+			}
+			finally {
+				try {
+					con.close();
+					System.out.println("Connection closed..........");
+				} 
+				catch (SQLException sqlException)
+				{
+					sqlException.printStackTrace();
+				}
+			}
+			    	
+    	} 
+    	catch(Exception e2)
+    	{
+    		e2.printStackTrace();
+    	}
     	
-    return answer;
+    	
+    	
+    	return answer;
     	
     }
 
     
-   // ==========================================JDBC=====================================
+   // ==========================================REQUEST=====================================
     
-    @Autowired(required = true) service serv;
-	//@Scheduled(fixedRate = 5000 )
+  @Autowired(required = true) service serv;
     
-		public String Response() throws IOException {
-    	
+  @Autowired(required = true) POJO pojo;
+
+//@Scheduled(fixedRate = 5000 )
+
+public String Request() throws IOException {
+			
     	String apiResponse="";
     	
     	CaseRequest caseRequest=new CaseRequest();
@@ -164,44 +255,26 @@ public class ControllerService {
     	outcome.add("REFEREAL_FEE_SLAB_TRACTOR");
     	caseRequest.setOutcomes(outcome);
     	
-    	Gson gson = new Gson();
+    	Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd").create();    	
     	String json = gson.toJson(caseRequest);
     	
-    	System.out.println(json);
+    	//String json2 = gson.toJson(caseRequest.getCases().get(0).getRelTractorVolumeMon().get(0).getLmsAuthDate());
+    	//System.out.println(caseRequest.getCases().get(0).getRelTractorVolumeMon().get(0).getLmsAuthDate());
+    	//System.out.println(json.toString());
+    	//System.out.println("***************request*********"+"\n"+ json);
     	
 		try
 		{
-			apiResponse=  Request(json);
+			apiResponse =  Response(json);
 		} 
 		catch (Exception e) 
 		{
 			e.printStackTrace();
 			apiResponse="";
-		}
-		//jsontodb.update();
-    	
+		}    	
     	//return json;
 		return apiResponse;		
 	}
-   
-
-		
-
-    /*====================================  working code for get method  =====================================================
-    			
-    	ResponseEntity<String> responseEntity = null ;
-    	
-    	String urlString = "http://127.0.0.1:8080/gallop/";
-
-    	RestTemplate restTemplate = new RestTemplate();
-        
-    	URI uri = new URI(urlString);
-    	 
-    	ResponseEntity<String> result = restTemplate.getForEntity(uri, String.class);
-    	     
-    	return result;
-    	
-    ==========================================================================================================================*/
     
 
 }
